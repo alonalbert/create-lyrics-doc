@@ -68,7 +68,3 @@ if __name__ == '__main__':
 
   with open(path.join(dirname, name + '.odt'), 'w') as f:
     f.writelines(outputLines)
-
-  with open(path.join(dirname, name + '.xml'), 'w') as f:
-    f.writelines(outputLines)
-
