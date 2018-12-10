@@ -14,6 +14,7 @@ EMPTY_LINE = '<br/>\n'
 COPY_FILES = [
   'lyrics.css',
   'lyrics.js',
+  'lyrics.png',
 ]
 
 def findBody(lines):
@@ -61,7 +62,6 @@ if __name__ == '__main__':
       at += 1
 
 
-    print('%s: %d' % (song, maxLine))
     htmlFilename = song.replace(' ', "_").lower() + '.html'
     links += LINK_FORMAT.format(htmlFilename, song)
     with open(path.join(dst, htmlFilename), 'w') as f:
