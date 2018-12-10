@@ -1,8 +1,6 @@
 #!/usr/bin/python
 #
 import sys
-import lxml.etree as etree
-import xml.etree.ElementTree as ET
 
 from os import path
 
@@ -16,32 +14,13 @@ TITLE_LINE = 443
 INSERTION_LINE = TITLE_LINE + 3
 TRANSLATED_TITLE_LINE = TITLE_LINE + 1
 
-NAMESPACES = {
-  'office': 'urn:oasis:names:tc:opendocument:xmlns:office:1.0',
-  'text': 'urn:oasis:names:tc:opendocument:xmlns:text:1.0',
-}
-
-
-def stringify_children(node):
-  from lxml.etree import tostring
-  from itertools import chain
-  parts = ([node.text] +
-           list(chain(*([c.text, tostring(c), c.tail] for c in node.getchildren()))) +
-           [node.tail])
-  # filter removes possible Nones in texts and tails
-  return ''.join(filter(None, parts))
-
-
 if __name__ == '__main__':
-  filename = sys.argv[1]
+  dir = sys.argv[1]
+  name = path.basename(dir)
 
-  basename = path.basename(filename)
-  dirname = path.dirname(filename)
-  (name, ext) = path.splitext(basename)
-
-  with open(filename) as f:
+  with open(path.join(dir, "original.txt")) as f:
     originalLines = f.readlines()
-  with open(path.join(dirname, name + '-translated' + ext)) as f:
+  with open(path.join(dir, "translated.txt")) as f:
     translatedLines = f.readlines()
 
   if len(originalLines) != len(translatedLines):
@@ -66,5 +45,5 @@ if __name__ == '__main__':
       outputLines.insert(at + 2, CLOSE_LINE)
       at += 3
 
-  with open(path.join(dirname, name + '.odt'), 'w') as f:
+  with open(path.join(dir, name + '.odt'), 'w') as f:
     f.writelines(outputLines)
