@@ -23,6 +23,8 @@ def findBody(lines):
       return i
 
 if __name__ == '__main__':
+  siteDir = path.join(path.dirname(sys.argv[0]), 'site')
+
   src = sys.argv[1]
   dst = sys.argv[2]
 
@@ -39,8 +41,9 @@ if __name__ == '__main__':
       print 'Line mismatch. Aborting'
       exit(1)
 
-    with open(path.join(path.dirname(sys.argv[0]), 'song-template.html')) as f:
+    with open(path.join(siteDir, 'lyrics.html')) as f:
       lines = f.readlines()
+
 
     at =  findBody(lines)
 
@@ -68,9 +71,9 @@ if __name__ == '__main__':
       f.writelines(lines)
 
     for file in COPY_FILES:
-      copyfile(file, path.join(dst, file))
+      copyfile(path.join(siteDir, file), path.join(dst, file))
 
-  with open('index-template.html') as f:
+  with open(path.join(siteDir, 'lyrics.html')) as f:
     indexLines = f.readlines()
 
   at = findBody(indexLines)
