@@ -23,3 +23,15 @@ function toggle(e) {
     lastToggled =  null
   }
 }
+
+function scrollDown() {
+    var content = document.getElementById("content");
+    var header = document.getElementById("header");
+    content.scrollTop += content.getBoundingClientRect().height - 2 * header.getBoundingClientRect().height;
+}
+
+function scrollUp() {
+    var content = document.getElementById("content");
+    var header = document.getElementById("header");
+    content.scrollTop -= content.getBoundingClientRect().height - 2 * header.getBoundingClientRect().height;
+}

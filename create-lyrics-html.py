@@ -6,9 +6,8 @@ from os import path, listdir
 from shutil import copyfile
 
 LINK_FORMAT = '<a class="link" href="{0}">{1}</a><br/>\n'
-FORMAT='<div class="%s" onload="load(this)" onclick="toggle(this)" data-text="{0}" data-translation="{1}">{0}</div>\n'
-TITLE_FORMAT = FORMAT % ("line title")
-LINE_FORMAT = FORMAT % ("line")
+TITLE_FORMAT = '<span class="title" onload="load(this)" onclick="toggle(this)" data-text="{0}" data-translation="{1}">{0}</span>\n'
+LINE_FORMAT = '<div class="line" onload="load(this)" onclick="toggle(this)" data-text="{0}" data-translation="{1}">{0}</div>\n'
 EMPTY_LINE = '<br/>\n'
 
 COPY_FILES = [
@@ -17,10 +16,10 @@ COPY_FILES = [
   'lyrics.png',
 ]
 
-def findBody(lines):
+def find(lines, text):
   for (i, line) in enumerate(lines):
-    if (line.strip() == '</body>'):
-      return i
+    if (text in line):
+      return i + 1
 
 if __name__ == '__main__':
   siteDir = path.join(path.dirname(sys.argv[0]), 'site')
@@ -45,10 +44,10 @@ if __name__ == '__main__':
       lines = f.readlines()
 
 
-    at =  findBody(lines)
+    at =  find(lines, '<div id="header">')
 
     lines.insert(at, TITLE_FORMAT.format(originalLines[0], translatedLines[0]))
-    at += 1
+    at =  find(lines, '<div id="content">')
     maxLine = 0
     for (i, line) in enumerate(originalLines[1:]):
       line = line.strip()
@@ -76,7 +75,7 @@ if __name__ == '__main__':
   with open(path.join(siteDir, 'lyrics.html')) as f:
     indexLines = f.readlines()
 
-  at = findBody(indexLines)
+  at = find(indexLines, '<body>')
   for link in links:
     indexLines.insert(at, link)
     at += 1
