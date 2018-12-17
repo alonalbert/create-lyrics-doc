@@ -102,7 +102,7 @@ if __name__ == '__main__':
     for file in COPY_FILES:
       copyfile(path.join(siteDir, file), path.join(dst, file))
 
-  with open(path.join(siteDir, 'lyrics.html')) as f:
+  with open(path.join(siteDir, 'index.html')) as f:
     indexLines = f.readlines()
 
   at = find(indexLines, '<body>')
