@@ -1,10 +1,13 @@
 #!/usr/bin/python
-#
-import sys
+# coding=utf-8
 
+import sys
+import json
 from os import path, listdir
 from shutil import copyfile
 import copy
+from gmusicapi.clients import Mobileclient
+import unidecode
 
 NEXT_FILE = '{next-file}'
 NEXT_NAME = '{next-name}'
@@ -21,6 +24,11 @@ COPY_FILES = [
   'lyrics.js',
   'lyrics.png',
 ]
+EXTERNAL_TRACKS = {
+  '8bdaec69-75e3-3ff7-8d14-a0f9eb9702a3': 'Duele el corazón',
+  '02734350-569a-38f2-9678-4302a092ccc3': 'Negro y Azul',
+}
+
 
 def find(lines, text):
   for (i, line) in enumerate(lines):
@@ -32,6 +40,30 @@ def toHtmlFileName(song):
   return song.replace(' ', "_").lower() + '.html'
 
 
+def get_playlist_tracks(mc, name):
+  playlists = mc.get_all_user_playlist_contents()
+  tracks = []
+  for playlist in playlists:
+    if playlist['name'] == name:
+      for track in playlist['tracks']:
+        if track['source'] == '2':
+          trackName = track['track']['title']
+        else:
+          trackName = EXTERNAL_TRACKS[track['trackId']].decode('utf-8')
+        tracks.append(unidecode.unidecode(trackName))
+      return tracks
+  return None
+
+
+def get_song_order(song, tracks):
+  lower = unidecode.unidecode(song.decode('utf-8')).lower()
+  for (i, track) in enumerate(tracks):
+    if lower in track.lower():
+      return i
+
+  return -1
+
+
 if __name__ == '__main__':
   siteDir = path.join(path.dirname(sys.argv[0]), 'site')
 
@@ -41,14 +73,27 @@ if __name__ == '__main__':
   with open(path.join(siteDir, 'lyrics.html')) as f:
     lyricsLines = f.readlines()
 
-  headerLines =  find(lyricsLines, '<div id="header">')
+  headerLines = find(lyricsLines, '<div id="header">')
   contentLines = find(lyricsLines, '<div id="content">')
   previousLine = find(lyricsLines, PREVIOUS_FILE)
   nextLine = find(lyricsLines, NEXT_FILE)
 
   links = []
   songs = sorted(listdir(src))
-  for (songNumber, song) in enumerate(songs):
+
+  # Play Music Client
+  mc = Mobileclient()
+  mc.oauth_login(Mobileclient.FROM_MAC_ADDRESS)
+
+  tracks = get_playlist_tracks(mc, 'Spanish')
+
+  sorted_songs = [None] * len(songs)
+
+  for song in songs:
+    order = get_song_order(song, tracks)
+    sorted_songs[order] = song
+
+  for (songNumber, song) in enumerate(sorted_songs):
     dir = path.join(src, song)
 
     with open(path.join(dir, "original.txt")) as f:
@@ -59,7 +104,6 @@ if __name__ == '__main__':
     if len(originalLines) != len(translatedLines):
       print 'Line mismatch. Aborting'
       exit(1)
-
 
     lines = copy.deepcopy(lyricsLines)
 
@@ -80,21 +124,22 @@ if __name__ == '__main__':
         lines.insert(at, LINE_FORMAT.format(line, translatedLine))
       at += 1
 
-
     htmlFilename = toHtmlFileName(song)
     links += LINK_FORMAT.format(htmlFilename, song)
 
-    if songNumber == len(songs) - 1:
+    if songNumber == len(sorted_songs) - 1:
       del lines[nextLine]
     else:
-      nextSong = songs[songNumber  + 1]
+      nextSong = sorted_songs[songNumber + 1]
       lines[nextLine] = lines[nextLine].replace(NEXT_NAME, nextSong).replace(NEXT_FILE, toHtmlFileName(nextSong))
 
-    if songNumber  == 0:
+    if songNumber == 0:
       del lines[previousLine]
     else:
-      previousSong = songs[songNumber  - 1]
-      lines[previousLine] = lines[previousLine].replace(PREVIOUS_NAME, previousSong).replace(PREVIOUS_FILE, toHtmlFileName(previousSong))
+      previousSong = sorted_songs[songNumber - 1]
+      lines[previousLine] = lines[previousLine].replace(PREVIOUS_NAME, previousSong).replace(PREVIOUS_FILE,
+                                                                                             toHtmlFileName(
+                                                                                               previousSong))
 
     with open(path.join(dst, htmlFilename), 'w') as f:
       f.writelines(lines)
